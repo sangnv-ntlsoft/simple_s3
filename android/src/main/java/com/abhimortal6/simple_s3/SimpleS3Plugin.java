@@ -50,7 +50,8 @@ public class SimpleS3Plugin implements FlutterPlugin, MethodCallHandler, EventCh
     private EventChannel eventChannel;
     private MethodChannel methodChannel;
     private EventChannel.EventSink events;
-
+    private static final String TAGTRANS = "Transfer";
+    private boolean isResultSubmitted = false;
     public SimpleS3Plugin() {
 
         clientConfiguration = new ClientConfiguration();
@@ -273,21 +274,25 @@ public class SimpleS3Plugin implements FlutterPlugin, MethodCallHandler, EventCh
 
         @Override
         public void onStateChanged(int id, TransferState state) {
+            if (isResultSubmitted) return;  // Ngăn chặn việc gọi nhiều lần
+
             switch (state) {
                 case COMPLETED:
-                    Log.d(TAG, "onStateChanged: \"COMPLETED, ");
+                    Log.d(TAG, "onStateChanged: \"COMPLETED\"");
                     parentResult.success(true);
+                    isResultSubmitted = true;
                     break;
                 case WAITING:
-                    Log.d(TAG, "onStateChanged: \"WAITING, ");
+                    Log.d(TAG, "onStateChanged: \"WAITING\"");
                     break;
                 case FAILED:
                     invalidateEventSink();
-                    Log.d(TAG, "onStateChanged: \"FAILED, ");
+                    Log.d(TAG, "onStateChanged: \"FAILED\"");
                     parentResult.success(false);
+                    isResultSubmitted = true;  // Đánh dấu là đã gửi kết quả
                     break;
                 default:
-                    Log.d(TAG, "onStateChanged: \"SOMETHING ELSE, ");
+                    Log.d(TAG, "onStateChanged: \"SOMETHING ELSE\"");
                     break;
             }
         }
