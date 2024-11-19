@@ -274,28 +274,43 @@ public class SimpleS3Plugin implements FlutterPlugin, MethodCallHandler, EventCh
 
         @Override
         public void onStateChanged(int id, TransferState state) {
-            if (isResultSubmitted) return;  // Ngăn chặn việc gọi nhiều lần
+            if (isResultSubmitted) {
+                Log.d(TAG, "onStateChanged: Result already submitted, ignoring further states");
+                return;  // Prevent duplicate submissions
+            }
 
             switch (state) {
                 case COMPLETED:
-                    Log.d(TAG, "onStateChanged: \"COMPLETED\"");
-                    parentResult.success(true);
-                    isResultSubmitted = true;
+                    Log.d(TAG, "onStateChanged: COMPLETED");
+                    try {
+                        parentResult.success(true);
+                    } catch (IllegalStateException e) {
+                        Log.e(TAG, "Error: Reply already submitted - " + e.getMessage());
+                    }
+                    isResultSubmitted = true; // Mark result as submitted
                     break;
+
                 case WAITING:
-                    Log.d(TAG, "onStateChanged: \"WAITING\"");
+                    Log.d(TAG, "onStateChanged: WAITING");
                     break;
+
                 case FAILED:
                     invalidateEventSink();
-                    Log.d(TAG, "onStateChanged: \"FAILED\"");
-                    parentResult.success(false);
-                    isResultSubmitted = true;  // Đánh dấu là đã gửi kết quả
+                    Log.d(TAG, "onStateChanged: FAILED");
+                    try {
+                        parentResult.success(false);
+                    } catch (IllegalStateException e) {
+                        Log.e(TAG, "Error: Reply already submitted - " + e.getMessage());
+                    }
+                    isResultSubmitted = true; // Mark result as submitted
                     break;
+
                 default:
-                    Log.d(TAG, "onStateChanged: \"SOMETHING ELSE\"");
+                    Log.d(TAG, "onStateChanged: SOMETHING ELSE - " + state);
                     break;
             }
         }
+
 
         @Override
         public void onProgressChanged(int id, long bytesCurrent, long bytesTotal) {
