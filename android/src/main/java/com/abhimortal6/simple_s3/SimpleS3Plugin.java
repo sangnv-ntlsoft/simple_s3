@@ -52,6 +52,7 @@ public class SimpleS3Plugin implements FlutterPlugin, MethodCallHandler, EventCh
     private EventChannel.EventSink events;
     private static final String TAGTRANS = "Transfer";
     private boolean isResultSubmitted = false;
+
     public SimpleS3Plugin() {
 
         clientConfiguration = new ClientConfiguration();
@@ -143,7 +144,7 @@ public class SimpleS3Plugin implements FlutterPlugin, MethodCallHandler, EventCh
             awsPath = s3FolderPath + "/" + fileName;
         }
         ObjectMetadata objectMetadata = new ObjectMetadata();
-        System.out.println(fileName.substring(fileName.lastIndexOf(".")+1));
+        System.out.println(fileName.substring(fileName.lastIndexOf(".") + 1));
         objectMetadata.setContentType(contentType);
 
 
@@ -209,7 +210,6 @@ public class SimpleS3Plugin implements FlutterPlugin, MethodCallHandler, EventCh
             final DeleteObjectRequest deleteObjectRequest = new DeleteObjectRequest(bucketName, filePath).withGeneralProgressListener(new Progress());
 
 
-
             Thread thread = new Thread() {
                 @Override
                 public void run() {
@@ -219,7 +219,6 @@ public class SimpleS3Plugin implements FlutterPlugin, MethodCallHandler, EventCh
 
             thread.start();
             parentResult.success(true);
-
 
 
         } catch (Exception e) {
@@ -274,11 +273,6 @@ public class SimpleS3Plugin implements FlutterPlugin, MethodCallHandler, EventCh
 
         @Override
         public void onStateChanged(int id, TransferState state) {
-            if (isResultSubmitted) {
-                Log.d(TAG, "onStateChanged: Result already submitted, ignoring further states");
-                return;  // Prevent duplicate submissions
-            }
-
             switch (state) {
                 case COMPLETED:
                     Log.d(TAG, "onStateChanged: COMPLETED");
@@ -287,7 +281,6 @@ public class SimpleS3Plugin implements FlutterPlugin, MethodCallHandler, EventCh
                     } catch (IllegalStateException e) {
                         Log.e(TAG, "Error: Reply already submitted - " + e.getMessage());
                     }
-                    isResultSubmitted = true; // Mark result as submitted
                     break;
 
                 case WAITING:
@@ -302,7 +295,6 @@ public class SimpleS3Plugin implements FlutterPlugin, MethodCallHandler, EventCh
                     } catch (IllegalStateException e) {
                         Log.e(TAG, "Error: Reply already submitted - " + e.getMessage());
                     }
-                    isResultSubmitted = true; // Mark result as submitted
                     break;
 
                 default:
