@@ -50,8 +50,7 @@ public class SimpleS3Plugin implements FlutterPlugin, MethodCallHandler, EventCh
     private EventChannel eventChannel;
     private MethodChannel methodChannel;
     private EventChannel.EventSink events;
-    private static final String TAGTRANS = "Transfer";
-    private boolean isResultSubmitted = false;
+
     public SimpleS3Plugin() {
 
         clientConfiguration = new ClientConfiguration();
@@ -274,43 +273,24 @@ public class SimpleS3Plugin implements FlutterPlugin, MethodCallHandler, EventCh
 
         @Override
         public void onStateChanged(int id, TransferState state) {
-            if (isResultSubmitted) {
-                Log.d(TAG, "onStateChanged: Result already submitted, ignoring further states");
-                return;  // Prevent duplicate submissions
-            }
-
             switch (state) {
                 case COMPLETED:
-                    Log.d(TAG, "onStateChanged: COMPLETED");
-                    try {
-                        parentResult.success(true);
-                    } catch (IllegalStateException e) {
-                        Log.e(TAG, "Error: Reply already submitted - " + e.getMessage());
-                    }
-                    isResultSubmitted = true; // Mark result as submitted
+                    Log.d(TAG, "onStateChanged: \"COMPLETED, ");
+                    parentResult.success(true);
                     break;
-
                 case WAITING:
-                    Log.d(TAG, "onStateChanged: WAITING");
+                    Log.d(TAG, "onStateChanged: \"WAITING, ");
                     break;
-
                 case FAILED:
                     invalidateEventSink();
-                    Log.d(TAG, "onStateChanged: FAILED");
-                    try {
-                        parentResult.success(false);
-                    } catch (IllegalStateException e) {
-                        Log.e(TAG, "Error: Reply already submitted - " + e.getMessage());
-                    }
-                    isResultSubmitted = true; // Mark result as submitted
+                    Log.d(TAG, "onStateChanged: \"FAILED, ");
+                    parentResult.success(false);
                     break;
-
                 default:
-                    Log.d(TAG, "onStateChanged: SOMETHING ELSE - " + state);
+                    Log.d(TAG, "onStateChanged: \"SOMETHING ELSE, ");
                     break;
             }
         }
-
 
         @Override
         public void onProgressChanged(int id, long bytesCurrent, long bytesTotal) {
